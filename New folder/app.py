@@ -2,7 +2,7 @@ from flask import Flask,render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash
 from flask_login import LoginManager, login_user, current_user
-import smtplib # Import the smtplib module
+import smtplib
 
 # Set up the Flask app
 app = Flask(__name__)
@@ -37,7 +37,13 @@ class User(db.Model):
 # the main route
 @app.route('/')
 def hello_world():
-    return render_template("layout.html")
+    return render_template("home.html")
+
+# the home page route
+app.route("/home")
+def home():
+    return render_template("home.html")
+
 
 # login route
 @app.route("/login", methods=["GET", "POST"])
@@ -50,11 +56,11 @@ def login():
         password = request.form.get("password")
 
         # make sure that the email is given
-        if not request.form.get("email"):
+        if not email:
             return flash("Please write your email")
 
         # make sure that the user wrote his password
-        if not request.form.get("password"):
+        if not password:
             return flash("Please write your password")
 
         # Use SQLAlchemy to query the database for a user with the given email and password
@@ -79,38 +85,30 @@ def signup():
 
         # get the input information
         email = request.form.get("email")
-        username = request.form.get("username")
         password1 = request.form.get("password1")
         password2 = request.form.get("password2")
 
         # make sure that the email is given
-        if not request.form.get("email"):
+        if not email:
             return flash("Please provide an email")
 
-        # make sure that the username is given
-        if not request.form.get("username"):
-            return flash("Please provide an username")
-
         # make sure that the user wrote his password
-        if not request.form.get("password1"):
+        if not password1:
             return flash("Please provide a password")
 
         # make sure that the user confirms his password
-        if not request.form.get("password2"):
+        if not password2:
             return flash("Please confirm your password")
 
         # Check if the two password inputs match
         if password1 != password2:
             return "Passwords do not match"
 
-        # Check if the provided username or email is already registered
-        if User.query.filter(User.username == username).first() is not None:
-            return flash("Username is already taken")
         if User.query.filter(User.email == email).first() is not None:
             return flash("Email is already registered")
 
         # Create a new user
-        new_user = User(username=username, email=email, password=password1)
+        new_user = User(email=email, password=password1)
 
         # Hash the user's password for security
         new_user.set_password(password1)
@@ -162,8 +160,8 @@ def reset_password():
         else:
             flash("email not found")
             
-
-    return render_template("resetpassword.html")
+    else:  
+        return render_template("resetpassword.html")
 
 if __name__ == '__main__':
     app.run(debug = True)
